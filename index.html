@@ -18,7 +18,7 @@ button{width:100%;margin-top:20px;border:0;border-radius:13px;padding:15px;backg
 <h1>MSP Notification Preview</h1><div class="sub">Create and send an MSP notification to this phone.</div>
 <label>Signal</label><select id="signal"><option>BUY</option><option>SELL</option><option>CUSTOM</option></select>
 <div class="row"><div><label>Symbol</label><input id="symbol" value="XAUUSD"></div><div><label>Timeframe</label><input id="tf" value="1H"></div></div>
-<div class="row"><div><label>Stop Loss</label><input id="sl" value="3450.72"></div><div><label>Take Profit</label><input id="tp" value="3462.72"></div></div>
+<div class="row"><div><label>Stop Loss (Points)</label><input id="sl" inputmode="numeric" value="600"></div><div><label>Take Profit (Points)</label><input id="tp" inputmode="numeric" value="1200"></div></div>
 <div class="row"><div><label>Lot Size</label><input id="lot" value="0.50"></div><div><label>Timing</label><select id="timing"><option>Now</option><option>5 minutes before</option><option>3 minutes before</option><option>2 minutes before</option><option>1 minute before</option></select></div></div>
 <label>Message</label><textarea id="msg">New candle setup detected</textarea>
 <div class="preview"><b>NOTIFICATION PREVIEW</b><div id="preview" class="pbody"></div></div>
@@ -33,7 +33,7 @@ async function setup(){
 }
 function body(){
  const s=signal.value, icon=s==="BUY"?"🟢":s==="SELL"?"🔴":"🔔";
- return `${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value}\nTP: ${tp.value}\nLot Size: ${lot.value}\n⏱️ ${timing.value}\n${msg.value}`;
+ return `${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value} points\nTP: ${tp.value} points\nLot Size: ${lot.value}\n⏱️ ${timing.value}\n${msg.value}`;
 }
 function refresh(){preview.textContent=body()}
 document.querySelectorAll("input,select,textarea").forEach(e=>e.addEventListener("input",refresh));
@@ -51,11 +51,11 @@ send.onclick=async()=>{
  }
  const s=signal.value, icon=s==="BUY"?"🟢":s==="SELL"?"🔴":"🔔";
  await reg.showNotification("MSP — Market Signal Pro",{
-  body:`${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value}\nTP: ${tp.value}\nLot Size: ${lot.value}\n⏱️ ${timing.value}`,
+  body:`${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value} points\nTP: ${tp.value} points\nLot Size: ${lot.value}\n⏱️ ${timing.value}`,
   tag:"msp-"+Date.now(),
   renotify:true,
   vibrate:[150,80,150],
-  data:{detail:`SL: ${sl.value}\nTP: ${tp.value}\nLot Size: ${lot.value}\n${timing.value}\n${msg.value}`}
+  data:{detail:`SL: ${sl.value} points\nTP: ${tp.value} points\nLot Size: ${lot.value}\n${timing.value}\n${msg.value}`}
  });
 };
 setup();refresh();
