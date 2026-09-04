@@ -1,0 +1,17 @@
+{
+  "name": "MSP \u2014 Market Signal Pro",
+  "short_name": "MSP",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f1f3f5",
+  "theme_color": "#111111",
+  "description": "MSP notification preview tool",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
