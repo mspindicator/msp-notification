@@ -19,11 +19,7 @@ button{width:100%;margin-top:20px;border:0;border-radius:13px;padding:15px;backg
 <label>Signal</label><select id="signal"><option>BUY</option><option>SELL</option><option>CUSTOM</option></select>
 <div class="row"><div><label>Symbol</label><input id="symbol" value="XAUUSD"></div><div><label>Timeframe</label><input id="tf" value="1H"></div></div>
 <div class="row"><div><label>Stop Loss (Points)</label><input id="sl" inputmode="numeric" value="600"></div><div><label>Take Profit (Points)</label><input id="tp" inputmode="numeric" value="1200"></div></div>
-<div class="row"><div><label>Lot Size</label><input id="lot" value="0.50"></div><div><label>Timing</label><select id="timing"><option value="0">Now</option><option value="custom">Custom time</option></select></div></div>
-<div id="customTime" class="row" style="display:none">
-  <div><label>Minutes</label><input id="customMinutes" type="number" min="0" max="1440" value="3"></div>
-  <div><label>Seconds</label><input id="customSeconds" type="number" min="0" max="59" value="0"></div>
-</div>
+<label>Candle</label><input id="candle" value="02:00" placeholder="02:00">
 <label>Message</label><textarea id="msg">New candle setup detected</textarea>
 <div class="preview"><b>NOTIFICATION PREVIEW</b><div id="preview" class="pbody"></div></div>
 <button id="enable">🔔 ENABLE NOTIFICATIONS</button>
@@ -37,7 +33,11 @@ async function setup(){
 }
 function body(){
  const s=signal.value, icon=s==="BUY"?"🟢":s==="SELL"?"🔴":"🔔";
- return `${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value} points\nTP: ${tp.value} points\nLot Size: ${lot.value}\n⏱️ ${timingText(getDelay())}\n${msg.value}`;
+ return `${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}
+SL: ${sl.value} points
+TP: ${tp.value} points
+Candle: ${candle.value}
+${msg.value}`;
 }
 function refresh(){preview.textContent=body()}
 document.querySelectorAll("input,select,textarea").forEach(e=>e.addEventListener("input",refresh));
@@ -47,54 +47,18 @@ enable.onclick=async()=>{
  if(p==="granted"){alert("Notifications enabled. Press SEND NOTIFICATION.");}
  else alert("Notification permission was not granted. Enable notifications for MSP in Android/browser settings.");
 };
-let scheduled=false, countdownTimer=null;
-function fmt(sec){return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");}
-function getDelay(){
- if(timing.value==="custom"){
-  const mins=Math.max(0,Math.min(1440,Number(customMinutes.value)||0));
-  const secs=Math.max(0,Math.min(59,Number(customSeconds.value)||0));
-  return Math.floor(mins*60+secs);
- }
- return Number(timing.value)||0;
-}
-function timingText(delay){
- if(timing.value==="custom") return `Custom — ${fmt(delay)}`;
- return timing.options[timing.selectedIndex].text;
-}
-timing.addEventListener("change",()=>{
- customTime.style.display=timing.value==="custom"?"grid":"none";
- refresh();
-});
-[customMinutes,customSeconds].forEach(e=>e.addEventListener("input",refresh));
-async function sendNow(){
+send.onclick=async()=>{
  if(!reg) reg=await navigator.serviceWorker.ready;
+ if(Notification.permission!=="granted"){
+   const p=await Notification.requestPermission();
+   if(p!=="granted") return;
+ }
  const s=signal.value, icon=s==="BUY"?"🟢":s==="SELL"?"🔴":"🔔";
  await reg.showNotification("MSP — Market Signal Pro",{
-  body:`${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value} points\nTP: ${tp.value} points\nLot Size: ${lot.value}\n⏱️ ${timingText(getDelay())}`,
+  body:`${icon} ${s} SIGNAL — ${symbol.value} • ${tf.value}\nSL: ${sl.value} points\nTP: ${tp.value} points\nCandle: ${candle.value}\n${msg.value}`,
   tag:"msp-"+Date.now(),renotify:true,vibrate:[150,80,150],
-  data:{detail:`SL: ${sl.value} points\nTP: ${tp.value} points\nLot Size: ${lot.value}\n${timingText(getDelay())}\n${msg.value}`}
+  data:{detail:`SL: ${sl.value} points\nTP: ${tp.value} points\nCandle: ${candle.value}\n${msg.value}`}
  });
-}
-send.onclick=async()=>{
- if(scheduled)return;
- if(!("Notification" in window)){alert("This browser does not support notifications.");return;}
- if(Notification.permission!=="granted"){
-  const p=await Notification.requestPermission();
-  if(p!=="granted"){alert("Notification permission was not granted.");return;}
- }
- const delay=getDelay();
- if(delay===0){await sendNow();return;}
- scheduled=true;send.disabled=true;
- let left=delay;
- const original="SEND NOTIFICATION";
- send.textContent=`SCHEDULED — ${fmt(left)}`;
- countdownTimer=setInterval(async()=>{
-  left--; send.textContent=`SCHEDULED — ${fmt(Math.max(left,0))}`;
-  if(left<=0){
-   clearInterval(countdownTimer); countdownTimer=null; scheduled=false;
-   send.disabled=false; send.textContent=original; await sendNow();
-  }
- },1000);
 };
 setup();refresh();
 </script></body></html>
